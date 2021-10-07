@@ -3,11 +3,35 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 #include "sdb.h"
+#include <memory/paddr.h>
 
 static int is_batch_mode = false;
 
 void init_regex();
 void init_wp_pool();
+
+static int cmd_c(char *args);
+static int cmd_q(char *args);
+static int cmd_help(char *args);
+static int cmd_si(char *args);
+static int cmd_info(char *args);
+static int cmd_x(char *args);
+
+static struct {
+  const char *name;
+  const char *description;
+  int (*handler) (char *);
+} cmd_table [] = {
+  { "help", "Display informations about all supported commands", cmd_help },
+  { "c", "Continue the execution of the program", cmd_c },
+  { "q", "Exit NEMU", cmd_q },
+  // TODO: Add more commands
+  { "si", "Run single step", cmd_si },
+  { "info", "Print the program state", cmd_info},
+  { "x", "Print the memory data", cmd_x},
+};
+
+#define NR_CMD ARRLEN(cmd_table)
 
 /* We use the `readline' library to provide more flexibility to read from stdin. */
 static char* rl_gets() {
@@ -37,22 +61,71 @@ static int cmd_q(char *args) {
   return -1;
 }
 
-static int cmd_help(char *args);
+// TODO: 单步执行
+static int cmd_si(char *args){
+  char *arg = strtok(NULL, " ");
+  int i = 1;
 
-static struct {
-  const char *name;
-  const char *description;
-  int (*handler) (char *);
-} cmd_table [] = {
-  { "help", "Display informations about all supported commands", cmd_help },
-  { "c", "Continue the execution of the program", cmd_c },
-  { "q", "Exit NEMU", cmd_q },
+  if (arg != NULL) {
+    i = atoi(arg);  // atoi失败会返回0
+  }
+  if (i == 0){
+    printf("Error: Please input \'si [N]\'.\n");
+    return -1;
+  }
 
-  /* TODO: Add more commands */
+  cpu_exec(i);
 
-};
+  return 0;
+}
 
-#define NR_CMD ARRLEN(cmd_table)
+// TODO: 打印程序状态
+static int cmd_info(char *args){
+  char *arg = strtok(NULL, " ");
+
+  if(*arg == 'r'){
+    isa_reg_display();
+    return 0;
+  }
+  else if(*arg == 'w'){
+    // TODO: 打印监视点信息
+    return 0;
+  }
+  else{
+    printf("Error: Please input \'info [r|w]\'.\n");
+    return -1;
+  }
+}
+
+// TODO: 打印内存数据
+static int cmd_x(char *args){
+  char *arg = strtok(NULL, " ");
+  if(arg == NULL){
+    printf("Error: Please input \'x [N] [paddr]\'.\n");
+    return -1;
+  }
+  int n = atoi(arg);
+
+  // 获取下一个参数
+  arg = strtok(NULL, " ");
+  if(arg == NULL){
+    printf("Error: Please input \'x [N] [paddr]\'.\n");
+    return -1;
+  }
+
+  paddr_t paddr;
+  sscanf(arg,"%x",&paddr);
+  word_t word; 
+  int i;
+  for(i = 0; i < n; i++){
+    if(i % 4 == 0) printf("\n");
+    word = paddr_read(paddr + i * sizeof(word_t), 8);
+    printf(FMT_WORD" ", word);
+  }
+  printf("\n");
+
+  return 0;
+}
 
 static int cmd_help(char *args) {
   /* extract the first argument */
