@@ -4,6 +4,7 @@
 #include <readline/history.h>
 #include "sdb.h"
 #include <memory/paddr.h>
+#include <sdb/watchpoint.h>
 
 static int is_batch_mode = false;
 
@@ -16,6 +17,8 @@ static int cmd_help(char *args);
 static int cmd_si(char *args);
 static int cmd_info(char *args);
 static int cmd_x(char *args);
+static int cmd_w(char *args);
+static int cmd_d(char *args);
 
 static struct {
   const char *name;
@@ -29,6 +32,8 @@ static struct {
   { "si", "Run single step", cmd_si },
   { "info", "Print the program state", cmd_info},
   { "x", "Print the memory data", cmd_x},
+  { "w", "Set a watch point", cmd_w},
+  { "d", "delete a watch point", cmd_d},
 };
 
 #define NR_CMD ARRLEN(cmd_table)
@@ -89,6 +94,7 @@ static int cmd_info(char *args){
   }
   else if(*arg == 'w'){
     // TODO: 打印监视点信息
+    info_wp();
     return 0;
   }
   else{
@@ -147,6 +153,19 @@ static int cmd_help(char *args) {
     }
     printf("Unknown command '%s'\n", arg);
   }
+  return 0;
+}
+
+static int cmd_w(char *args){
+  char *arg = strtok(NULL, " ");
+  set_wp(arg);
+  return 0;
+}
+
+static int cmd_d(char *args){
+  char *arg = strtok(NULL, " ");
+  int n = atoi(arg);
+  del_wp(n);
   return 0;
 }
 

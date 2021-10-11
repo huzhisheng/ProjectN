@@ -44,3 +44,7 @@ else
 # Include rules to build NEMU
 include $(NEMU_HOME)/scripts/native.mk
 endif
+# |xargs cat|grep -v ^$|wc -l
+.PHONY : count
+count :
+	@find ./ -name "*.c" -or -name "*.h"|xargs cat|grep -v ^$$|wc -l

@@ -19,6 +19,17 @@ void isa_reg_display() {
   printf("\n");
 }
 
+//! 假设寄存器是x0-x31
 word_t isa_reg_str2val(const char *s, bool *success) {
-  return 0;
+  if(*s != '$'){
+    *success = false;
+    return -1;
+  }
+  const char *temp_s = s+2;
+  int reg_num = atoi(temp_s);
+  if(reg_num < 0 || reg_num > 31){
+    *success = false;
+    return -1;
+  }
+  return gpr(reg_num);
 }

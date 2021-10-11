@@ -7,22 +7,23 @@
 
 // this should be enough
 static char buf[65536] = {};
-// TODO: 添加一个buf长度变量
+//! 添加一个buf长度变量
 static int buf_len = 0;
 
 static char code_buf[65536 + 128] = {}; // a little larger than `buf`
 static char *code_format =
 "#include <stdio.h>\n"
+"#include <stdint.h>\n"
 "int main() { "
-"  unsigned result = %s; "
-"  printf(\"%%u\", result); "
+"  uint64_t result = %s; "
+"  printf(\"%%lu\", result); "
 "  return 0; "
 "}";
 
 // TODO:
 static int choose(int num_choices)
 {
-  return rand()%num_choices;    //用rand产生随机数并设定范围
+  return rand()%num_choices;    //! 用rand产生随机数并设定范围
 }
 // TODO:
 static void gen_num(){
@@ -68,11 +69,11 @@ int main(int argc, char *argv[]) {
   }
   int i;
   for (i = 0; i < loop; i ++) {
-    buf_len = 0;  // TODO: 清零buf_len
+    buf_len = 0;  //! 清零buf_len
 
     gen_rand_expr();
 
-    if(buf_len >= 65500) continue;  // TODO: 生成的表达式太长, 跳过
+    if(buf_len >= 65500) continue;  //! 生成的表达式太长, 跳过
     buf[buf_len] = '\0';
 
     sprintf(code_buf, code_format, buf);
@@ -88,11 +89,11 @@ int main(int argc, char *argv[]) {
     fp = popen("/tmp/.expr", "r");
     assert(fp != NULL);
 
-    int result;
-    fscanf(fp, "%d", &result);
+    uint64_t result;  //! 这里做了部分修改, 针对uint64_t
+    fscanf(fp, "%lu", &result);
     pclose(fp);
 
-    printf("%u %s\n", result, buf);
+    printf("%lu %s\n", result, buf);
   }
   return 0;
 }
